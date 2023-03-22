@@ -5,7 +5,12 @@
 #ifndef SS2023_IOT_SURFACE_LDR_FRONTEND_H
 #define SS2023_IOT_SURFACE_LDR_FRONTEND_H
 
-const char *frontend_html = "<!DOCTYPE html>\
+const char *dashboard_header = "\
+    HTTP/1.1 200 OK\n\
+    Content-Type: text/html; charset=UTF-8\n\
+    Connection: close\n";
+
+const char *dashboard_content = "<!DOCTYPE html>\
     <html>\
     <head>\
         <title>IoT Surface LDR</title>\
@@ -15,6 +20,7 @@ const char *frontend_html = "<!DOCTYPE html>\
     <body>\
         <div class=\"ui container\">\
             <h1>IoT Surface LDR Dashboard</h1>\
+            <button class=\"ui fluid button primary\" style=\"margin: 1rem\">Start Measurement</button>\
             <canvas id=\"mainChart\"></canvas>\
         </div>\
         <script>\
