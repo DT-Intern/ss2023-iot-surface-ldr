@@ -1,0 +1,6 @@
+Black - GND -> Red -> Green
+Blue 8
+Purple 5
+Orange 0
+Black GND -> Vin
+Gray 5V
