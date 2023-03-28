@@ -71,8 +71,8 @@ void loop() {
                 measureSurface(true);
             } else {
                 Serial.println("Request type 3");
-                uart.print(F("HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 695\nConnection: close\n\n"));
-                uart.print(F("<!DOCTYPE html><html><head><title>IoT Surface LDR</title></head><body><div class=\"ui container\"><h1>IoT Surface LDR Dashboard</h1><div style=\"width: 100px; height: 100px; background-color: red;\"></div><button id=\"measureButton\" class=\"ui fluid button primary\" style=\"margin: 1rem\" onclick=\"measure()\">Start Measurement</button></div><script>const measure = () => {document.getElementById(\"measureButton\").disabled = true;fetch(\"http://172.20.10.8/measure\").then(r => r.text()).then(colors => {console.log(\"Processing request\");document.getElementById(\"measureButton\").disabled = false;document.getElementById(\"measureOutput\").style.backgroundColor = `rgb(${colors});`;});}</script></body></html>"));
+                uart.print(F("HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 655\nConnection: close\n\n"));
+                uart.print(F("<!DOCTYPE html><html><head><title>IoT Surface LDR</title></head><body><div class=\"ui container\"><h1>IoT Surface LDR Dashboard</h1><div id=\"measureOutput\" style=\"width: 100px; height: 100px\"></div><button id=\"measureButton\" class=\"ui fluid button primary\" style=\"margin: 1rem\" onclick=\"measure()\">Start Measurement</button></div><script>const measure = () => {document.getElementById(\"measureButton\").disabled = true;fetch(\"http://172.20.10.8/measure\").then(r => r.text()).then(colors => {document.getElementById(\"measureButton\").disabled = false;document.getElementById(\"measureOutput\").style.backgroundColor = `rgb(${colors})`;});}</script></body></html>"));
             }
         }
     }
@@ -102,11 +102,11 @@ void measureSurface(bool http) {
 
     if (http) {
         String result = "";
-        result += mapIntensityToRGB(analogRed, 261, 534);
+        result += mapIntensityToRGB(analogRed, 294.9, 527.8);
         result += ", ";
-        result += mapIntensityToRGB(analogGreen, 248, 551);
+        result += mapIntensityToRGB(analogGreen, 269.3, 550.7);
         result += ", ";
-        result += mapIntensityToRGB(analogBlue, 390, 763);
+        result += mapIntensityToRGB(analogBlue, 468.2, 770.6);
 
         Serial.println(F("Calculated values"));
         Serial.println(result);
@@ -115,17 +115,25 @@ void measureSurface(bool http) {
         uart.print("\n");
         uart.println();
         uart.print(result);
+    } else {
+        String result = "";
+        result += analogRed;
+        result += ", ";
+        result += analogGreen;
+        result += ", ";
+        result += analogBlue;
+        Serial.println(result);
     }
 
     digitalWrite(8, LOW);
 }
 
-int mapIntensityToRGB(int value, int lower, int upper) {
+int mapIntensityToRGB(int value, float lower, float upper) {
     if (value < lower) {
         value = lower;
     } else if (value > upper) {
         value = upper;
     }
 
-    return ((value - lower) / (upper - lower)) * 255;
+    return (1 - ((value - lower) / (upper - lower))) * 255.0;
 }
