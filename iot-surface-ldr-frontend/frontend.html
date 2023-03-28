@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>IoT Surface LDR</title>
+    </head>
+    <body>
+        <div class="ui container">
+            <h1>IoT Surface LDR Dashboard</h1>
+            <div style="width: 100px; height: 100px; background-color: red;"></div>
+            <button id="measureButton" class="ui fluid button primary" style="margin: 1rem" onclick="measure()">Start Measurement</button>
+        </div>
+        <script>
+            const measure = () => {
+                document.getElementById("measureButton").disabled = true;
+                fetch("http://172.20.10.8/measure")
+                    .then(r => r.text())
+                    .then(colors => {
+                        console.log("Processing request");
+                        document.getElementById("measureButton").disabled = false;
+                        document.getElementById("measureOutput").style.backgroundColor = `rgb(${colors});`;
+                    });
+            }
+        </script>
+    </body>
+</html>
