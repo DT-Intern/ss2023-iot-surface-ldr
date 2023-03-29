@@ -19,6 +19,7 @@ The IoT device can be accessed and used over the webinterface. But the Arduino d
 | NAME | QUANTITY | COMPONENT      |
 |------|----------|----------------|
 | U1   | 1        | Arduino Uno R3 |
+| U1   | 1        | Wifi Shield V2.0|
 | D1   | 1        | LED RGB        |
 | S1   | 1        | Pushbutton     |
 | R1   | 1        | 169 Ω Resistor |
