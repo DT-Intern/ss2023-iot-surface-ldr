@@ -14,6 +14,13 @@
 #define SSID "iPhone$von$Max"
 #define KEY "12345678"
 
+float redLowerBounds = 294.9;
+float redUpperBounds = 527.8;
+float greenLowerBounds = 269.3;
+float greenUpperBounds = 550.7;
+float blueLowerBounds = 468.2;
+float blueUpperBounds = 770.6;
+
 SoftwareSerial uart(2, 3);
 WiFly wifly(&uart);
 
@@ -101,13 +108,29 @@ void loop() {
         if (uart.find("*OPEN*")) {
             delay(500);
             if (uart.find("measure")) {
-                Serial.println("Request type 2");
+                Serial.println(F("Request type 1"));
                 uart.print(F("HTTP/1.1 200 OK\nContent-Type: text/html\nConnection: close"));
                 measureSurface(true);
-            } else {
-                Serial.println("Request type 3");
-                uart.print(F("HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 2538\nConnection: close\n\n"));
-                uart.print(F("<!DOCTYPE html><html><head><title>IoT Surface LDR</title><link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.5.0/semantic.min.css\" integrity=\"sha512-KXol4x3sVoO+8ZsWPFI/r5KBVB/ssCGB5tsv2nVOKwLg33wTFP3fmnXa47FdSVIshVTgsYk/1734xSk9aFIa4A==\" crossorigin=\"anonymous\" referrerpolicy=\"no-referrer\" /><script src=\"https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js\"></script></head><body><div class=\"ui container\" style=\"margin: 1rem\"><h1>IoT Surface LDR Dashboard</h1><div style=\"display: flex\"><div id=\"measureOutput\" style=\"width: 100px; height: 100px; background-color: black;\"></div><h3 style=\"margin: 1rem\">Recent colors:</h3><div id=\"historyOutput\" style=\"display: flex\"></div></div><button id=\"measureButton\" class=\"ui fluid button primary\" style=\"margin: 1rem\" onclick=\"measure()\">Start Measurement</button><canvas id=\"historyChart\"></canvas></div><script>const createDataset = (name, color) => {return {label: name,data: [],borderColor: color,};};const context = document.getElementById(\"historyChart\");const measureButton = document.getElementById(\"measureButton\");const recentContainer = document.getElementById(\"historyOutput\");let labels = [];let redDataset = createDataset(\"Red\", \"rgb(255, 0, 0)\");let greenDataset = createDataset(\"Green\", \"rgb(0, 255, 0)\");let blueDataset = createDataset(\"Blue\", \"rgb(0, 0, 255)\");const chart = new Chart(context, {type: \"line\",data: {labels: labels,datasets: [redDataset,greenDataset,blueDataset,]},});const insertColors = (colors) => {const actualColors = colors.split(\", \");chart.data.datasets[0].data.push(actualColors[0]);chart.data.datasets[1].data.push(actualColors[1]);chart.data.datasets[2].data.push(actualColors[2]);chart.data.labels.push(\"I\");chart.update();if (recentContainer.children.length > 10) {recentContainer.removeChild(recentContainer.lastChild);}const recentItem = document.createElement(\"div\");recentItem.style.width = \"25px\";recentItem.style.height = \"25px\";recentItem.style.marginTop = \"0.9rem\";recentItem.style.marginRight = \"0.25rem\";recentItem.style.backgroundColor = `rgb(${colors})`;recentContainer.insertBefore(recentItem, recentContainer.firstChild);measureButton.disabled = false;measureButton.classList.remove(\"loading\");document.getElementById(\"measureOutput\").style.backgroundColor = `rgb(${colors})`;};const measure = () => {measureButton.disabled = true;measureButton.classList.add(\"loading\");fetch(\"http://172.20.10.8/measure\").then(r => r.text()).then(colors => insertColors(colors));};</script></body></html>"));
+            }
+
+            if (uart.find("white")) {
+                Serial.println(F("Calibration 1"));
+                uart.print(F("HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 2\nConnection: close\n\n"));
+                // calibrateMinimums();
+                uart.print(F("OK"));
+            }
+
+            if (uart.find("black")) {
+                Serial.println(F("Calibration 2"));
+                uart.print(F("HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 2\nConnection: close\n\n"));
+                // calibrateMaximums();
+                uart.print(F("OK"));
+            }
+
+            if (uart.find("home")) {
+                Serial.println(F("Request type 1"));
+                uart.print(F("HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 3293\nConnection: close\n\n"));
+                uart.print(F("<!DOCTYPE html><html><head><title>IoT Surface LDR</title><link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.5.0/semantic.min.css\" integrity=\"sha512-KXol4x3sVoO+8ZsWPFI/r5KBVB/ssCGB5tsv2nVOKwLg33wTFP3fmnXa47FdSVIshVTgsYk/1734xSk9aFIa4A==\" crossorigin=\"anonymous\" referrerpolicy=\"no-referrer\" /><script src=\"https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js\"></script></head><body><div class=\"ui container\" style=\"margin: 1rem\"><h1>IoT Surface LDR Dashboard</h1><div style=\"display: flex\"><div id=\"measureOutput\" style=\"width: 100px; height: 100px; background-color: black;\"></div><h3 style=\"margin: 1rem\">Recent colors:</h3><div id=\"historyOutput\" style=\"display: flex\"></div></div><button id=\"measureButton\" class=\"ui fluid button primary\" style=\"margin-top: 1rem\" onclick=\"measure()\">Start Measurement</button><button id=\"calibrateWhiteButton\" class=\"ui fluid button orange\" style=\"margin-top: 0.5rem\" onclick=\"calibrate('calibratewhite', 'calibrateWhiteButton')\">Calibrate White</button><button id=\"calibrateBlackButton\" class=\"ui fluid button orange\" style=\"margin-top: 0.5rem; margin-bottom: 1rem;\" onclick=\"calibrate('calibrateblack', 'calibrateBlackButton')\">Calibrate Black</button><canvas id=\"historyChart\"></canvas></div><script>const createDataset = (name, color) => {return {label: name,data: [],borderColor: color,};};const context = document.getElementById(\"historyChart\");const measureButton = document.getElementById(\"measureButton\");const recentContainer = document.getElementById(\"historyOutput\");let labels = [];let redDataset = createDataset(\"Red\", \"rgb(255, 0, 0)\");let greenDataset = createDataset(\"Green\", \"rgb(0, 255, 0)\");let blueDataset = createDataset(\"Blue\", \"rgb(0, 0, 255)\");const chart = new Chart(context, {type: \"line\",data: {labels: labels,datasets: [redDataset,greenDataset,blueDataset,]},});const insertColors = (colors) => {const actualColors = colors.split(\", \");chart.data.datasets[0].data.push(actualColors[0]);chart.data.datasets[1].data.push(actualColors[1]);chart.data.datasets[2].data.push(actualColors[2]);chart.data.labels.push(\"I\");chart.update();if (recentContainer.children.length > 10) {recentContainer.removeChild(recentContainer.lastChild);}const recentItem = document.createElement(\"div\");recentItem.style.width = \"25px\";recentItem.style.height = \"25px\";recentItem.style.marginTop = \"0.9rem\";recentItem.style.marginRight = \"0.25rem\";recentItem.style.backgroundColor = `rgb(${colors})`;recentContainer.insertBefore(recentItem, recentContainer.firstChild);measureButton.disabled = false;measureButton.classList.remove(\"loading\");document.getElementById(\"measureOutput\").style.backgroundColor = `rgb(${colors})`;};const measure = () => {measureButton.disabled = true;measureButton.classList.add(\"loading\");fetch(\"http://172.20.10.8/measure\").then(r => r.text()).then(colors => insertColors(colors));};const calibrate = (color, button) => {const referenceButton = document.getElementById(button);referenceButton.disabled = true;referenceButton.classList.add(\"loading\");console.log(`Connecting to http://127.20.10.8/${color}`);fetch(`http://127.20.10.8/${color}`).then(c => c.text()).then(_ => {referenceButton.disabled = false;referenceButton.classList.remove(\"loading\");});}</script></body></html>"));
             }
         }
     }
@@ -173,6 +196,58 @@ void measureSurface(bool http) {
         result += analogBlue;
         Serial.println(result);
     }
+
+    // Turn the lights off
+    digitalWrite(8, LOW);
+}
+
+void calibrateMinimums() {
+    digitalWrite(13, HIGH);
+    digitalWrite(12, LOW);
+    digitalWrite(8, LOW);
+    delay(250);
+    redLowerBounds = analogRead(A0);
+    delay(250);
+
+    digitalWrite(13, LOW);
+    digitalWrite(12, HIGH);
+    digitalWrite(8, LOW);
+    delay(250);
+    greenLowerBounds = analogRead(A0);
+    delay(250);
+
+    digitalWrite(13, LOW);
+    digitalWrite(12, LOW);
+    digitalWrite(8, HIGH);
+    delay(250);
+    blueLowerBounds = analogRead(A0);
+    delay(250);
+
+    // Turn the lights off
+    digitalWrite(8, LOW);
+}
+
+void calibrateMaximums() {
+    digitalWrite(13, HIGH);
+    digitalWrite(12, LOW);
+    digitalWrite(8, LOW);
+    delay(250);
+    redUpperBounds = analogRead(A0);
+    delay(250);
+
+    digitalWrite(13, LOW);
+    digitalWrite(12, HIGH);
+    digitalWrite(8, LOW);
+    delay(250);
+    greenUpperBounds = analogRead(A0);
+    delay(250);
+
+    digitalWrite(13, LOW);
+    digitalWrite(12, LOW);
+    digitalWrite(8, HIGH);
+    delay(250);
+    blueUpperBounds = analogRead(A0);
+    delay(250);
 
     // Turn the lights off
     digitalWrite(8, LOW);

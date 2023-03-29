@@ -15,7 +15,9 @@
 
                 </div>
             </div>
-            <button id="measureButton" class="ui fluid button primary" style="margin: 1rem" onclick="measure()">Start Measurement</button>
+            <button id="measureButton" class="ui fluid button primary" style="margin-top: 1rem" onclick="measure()">Start Measurement</button>
+            <button id="calibrateWhiteButton" class="ui fluid button orange" style="margin-top: 0.5rem" onclick="calibrate('calibratewhite', 'calibrateWhiteButton')">Calibrate White</button>
+            <button id="calibrateBlackButton" class="ui fluid button orange" style="margin-top: 0.5rem; margin-bottom: 1rem;" onclick="calibrate('calibrateblack', 'calibrateBlackButton')">Calibrate Black</button>
             <canvas id="historyChart"></canvas>
         </div>
         <script>
@@ -81,6 +83,20 @@
                     .then(r => r.text())
                     .then(colors => insertColors(colors));
             };
+
+            const calibrate = (color, button) => {
+                const referenceButton = document.getElementById(button);
+                referenceButton.disabled = true;
+                referenceButton.classList.add("loading");
+
+                console.log(`Connecting to http://127.20.10.8/${color}`);
+                fetch(`http://127.20.10.8/${color}`)
+                    .then(c => c.text())
+                    .then(_ => {
+                        referenceButton.disabled = false;
+                        referenceButton.classList.remove("loading");
+                    });
+            }
         </script>
     </body>
 </html>
