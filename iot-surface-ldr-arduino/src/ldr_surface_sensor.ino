@@ -1,3 +1,12 @@
+/**
+ * Main script of the IoT-Surface-Sensor project.
+ *
+ * @author Maximilian Flügel
+ * @author Jannes Bikker
+ * @author Alina Simon
+ * @version 1.0
+ */
+
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 #include "WiFly.h"
@@ -8,6 +17,11 @@
 SoftwareSerial uart(2, 3);
 WiFly wifly(&uart);
 
+/**
+ * Setup method of the program.
+ * This method configures all input and outputs pins and starts the UART and Serial interfaces.
+ * Furthermore, this method invokes the methods for configuring WiFly and the Network capabilities.
+ */
 void setup() {
     // Configure all pins
     pinMode(7, INPUT);
@@ -25,6 +39,12 @@ void setup() {
     connectAndVerifyNetwork();
 }
 
+/**
+ * Method used for WiFly configuration.
+ * This method starts by resetting the WiFi-Interface.
+ * After that, the local port is set to 80 (HTTP default).
+ * Furthermore, the default string is set to "0" (none) and new requests are buffered to "*OPEN*".
+ */
 void configureWifly() {
     wifly.reset();
     Serial.println("Starting");
@@ -35,6 +55,13 @@ void configureWifly() {
     wifly.sendCommand("set comm open *OPEN*\r");
 }
 
+/**
+ * Method that establishes the connection to the WiFi network and verifies the connection.
+ * The SSID and KEY variables are used for the connection.
+ * By default, WPA2 PSK (Pre-Shared-Key) is used for network authentication.
+ * After the connection has been established the controller waits 5 seconds for IP-Address association.
+ * After the 5 seconds, the command to retrieve the current IP is invoked and then printed to the Serial monitor.
+ */
 void connectAndVerifyNetwork() {
     // Connect to the configured network
     while (wifly.join(SSID, KEY, WIFLY_AUTH_WPA2_PSK) == false) {
@@ -54,6 +81,14 @@ void connectAndVerifyNetwork() {
     }
 }
 
+/**
+ * Method that is invoked continuously as long as the controller is running.
+ * This method checks for any button input and incoming HTTP requests.
+ * In case the button is pressed, the surface measurement method is invoked.
+ * The controller has two HTTP endpoints:
+ * / : Index URL that returns the dashboard of the application.
+ * /measure : Invokes a surface measurement and returns the rgb values.
+ */
 void loop() {
     // Check for button input
     if (digitalRead(7)) {
@@ -78,7 +113,17 @@ void loop() {
     }
 }
 
+/**
+ * Method that invokes a single surface measurement.
+ * This is done by sequentially measuring the light intensity for red, green and blue.
+ * After that, the intensity values are mapped to the corresponding RGB color values.
+ * The bounds for each color channel are pre-configured and have to be calibrated for the surface.
+ * After that, the result is either returned via HTTP or serial.
+ *
+ * @param http Determines whether the output should be via HTTP or serial.
+ */
 void measureSurface(bool http) {
+    // Measure red
     digitalWrite(13, HIGH);
     digitalWrite(12, LOW);
     digitalWrite(8, LOW);
@@ -86,6 +131,7 @@ void measureSurface(bool http) {
     int analogRed = analogRead(A0);
     delay(250);
 
+    // Measure green
     digitalWrite(13, LOW);
     digitalWrite(12, HIGH);
     digitalWrite(8, LOW);
@@ -93,6 +139,7 @@ void measureSurface(bool http) {
     int analogGreen = analogRead(A0);
     delay(250);
 
+    // Measure blue
     digitalWrite(13, LOW);
     digitalWrite(12, LOW);
     digitalWrite(8, HIGH);
@@ -101,6 +148,7 @@ void measureSurface(bool http) {
     delay(250);
 
     if (http) {
+        // Send the result via HTTP
         String result = "";
         result += mapIntensityToRGB(analogRed, 294.9, 527.8);
         result += ", ";
@@ -116,6 +164,7 @@ void measureSurface(bool http) {
         uart.println();
         uart.print(result);
     } else {
+        // Send the result via serial
         String result = "";
         result += analogRed;
         result += ", ";
@@ -125,9 +174,20 @@ void measureSurface(bool http) {
         Serial.println(result);
     }
 
+    // Turn the lights off
     digitalWrite(8, LOW);
 }
 
+/**
+ * Function that maps a given light intensity value from a given range to an RGB value.
+ * The following formula is used for conversion: (1 - ((x - min) / (max - min)) * 255.
+ *
+ * @param value Value that should be converted to RGB.
+ * @param lower Lower bounds of the light intensity range.
+ * @param upper Upper bounds of the light intensity range.
+ *
+ * @return Returns the RGB value [0..255].
+ */
 int mapIntensityToRGB(int value, float lower, float upper) {
     if (value < lower) {
         value = lower;
