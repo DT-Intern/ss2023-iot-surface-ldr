@@ -89,14 +89,13 @@
                 referenceButton.disabled = true;
                 referenceButton.classList.add("loading");
 
-                console.log(`Connecting to http://127.20.10.8/${color}`);
-                fetch(`http://127.20.10.8/${color}`)
+                fetch(`http://172.20.10.8/${color}`)
                     .then(c => c.text())
                     .then(_ => {
                         referenceButton.disabled = false;
                         referenceButton.classList.remove("loading");
                     });
-            }
+            };
         </script>
     </body>
 </html>
