@@ -16,8 +16,8 @@
                 </div>
             </div>
             <button id="measureButton" class="ui fluid button primary" style="margin-top: 1rem" onclick="measure()">Start Measurement</button>
-            <button id="calibrateWhiteButton" class="ui fluid button orange" style="margin-top: 0.5rem" onclick="calibrate('calibratewhite', 'calibrateWhiteButton')">Calibrate White</button>
-            <button id="calibrateBlackButton" class="ui fluid button orange" style="margin-top: 0.5rem; margin-bottom: 1rem;" onclick="calibrate('calibrateblack', 'calibrateBlackButton')">Calibrate Black</button>
+            <button id="calibrateWhiteButton" class="ui fluid button orange" style="margin-top: 0.5rem" onclick="calibrate('action=2', 'calibrateWhiteButton')">Calibrate White</button>
+            <button id="calibrateBlackButton" class="ui fluid button orange" style="margin-top: 0.5rem; margin-bottom: 1rem;" onclick="calibrate('action=3', 'calibrateBlackButton')">Calibrate Black</button>
             <canvas id="historyChart"></canvas>
         </div>
         <script>
@@ -79,7 +79,7 @@
                 measureButton.disabled = true;
                 measureButton.classList.add("loading");
 
-                fetch("http://172.20.10.8/measure")
+                fetch("http://172.20.10.8/action=1")
                     .then(r => r.text())
                     .then(colors => insertColors(colors));
             };
