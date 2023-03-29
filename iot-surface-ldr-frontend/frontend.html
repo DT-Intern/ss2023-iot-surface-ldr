@@ -8,7 +8,13 @@
     <body>
         <div class="ui container" style="margin: 1rem">
             <h1>IoT Surface LDR Dashboard</h1>
-            <div id="measureOutput" style="width: 100px; height: 100px"></div>
+            <div style="display: flex">
+                <div id="measureOutput" style="width: 100px; height: 100px; background-color: black;"></div>
+                <h3 style="margin: 1rem">Recent colors:</h3>
+                <div id="historyOutput" style="display: flex">
+
+                </div>
+            </div>
             <button id="measureButton" class="ui fluid button primary" style="margin: 1rem" onclick="measure()">Start Measurement</button>
             <canvas id="historyChart"></canvas>
         </div>
@@ -22,6 +28,9 @@
             };
 
             const context = document.getElementById("historyChart");
+            const measureButton = document.getElementById("measureButton");
+            const recentContainer = document.getElementById("historyOutput");
+
             let labels = [];
             let redDataset = createDataset("Red", "rgb(255, 0, 0)");
             let greenDataset = createDataset("Green", "rgb(0, 255, 0)");
@@ -39,21 +48,38 @@
                 },
             });
 
+            const insertColors = (colors) => {
+                const actualColors = colors.split(", ");
+                chart.data.datasets[0].data.push(actualColors[0]);
+                chart.data.datasets[1].data.push(actualColors[1]);
+                chart.data.datasets[2].data.push(actualColors[2]);
+                chart.data.labels.push("I");
+                chart.update();
+
+                if (recentContainer.children.length > 10) {
+                    recentContainer.removeChild(recentContainer.lastChild);
+                }
+
+                const recentItem = document.createElement("div");
+                recentItem.style.width = "25px";
+                recentItem.style.height = "25px";
+                recentItem.style.marginTop = "0.9rem";
+                recentItem.style.marginRight = "0.25rem";
+                recentItem.style.backgroundColor = `rgb(${colors})`;
+                recentContainer.insertBefore(recentItem, recentContainer.firstChild);
+
+                measureButton.disabled = false;
+                measureButton.classList.remove("loading");
+                document.getElementById("measureOutput").style.backgroundColor = `rgb(${colors})`;
+            };
+
             const measure = () => {
-                document.getElementById("measureButton").disabled = true;
+                measureButton.disabled = true;
+                measureButton.classList.add("loading");
+
                 fetch("http://172.20.10.8/measure")
                     .then(r => r.text())
-                    .then(colors => {
-                        const actualColors = colors.split(", ");
-                        chart.data.datasets[0].data.push(actualColors[0]);
-                        chart.data.datasets[1].data.push(actualColors[1]);
-                        chart.data.datasets[2].data.push(actualColors[2]);
-                        chart.data.labels.push("I");
-                        chart.update();
-
-                        document.getElementById("measureButton").disabled = false;
-                        document.getElementById("measureOutput").style.backgroundColor = `rgb(${colors})`;
-                    });
+                    .then(colors => insertColors(colors));
             };
         </script>
     </body>
