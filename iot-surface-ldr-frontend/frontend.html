@@ -28,9 +28,13 @@
                 <i id="calibrateWhiteButtonIcon" class="sync alternate icon"></i>
                 Calibrate White
             </button>
-            <button id="calibrateBlackButton" class="ui fluid labeled icon button orange" style="margin-top: 0.5rem; margin-bottom: 1rem;" onclick="calibrate('action=3', 'calibrateBlackButton')">
+            <button id="calibrateBlackButton" class="ui fluid labeled icon button orange" style="margin-top: 0.5rem" onclick="calibrate('action=3', 'calibrateBlackButton')">
                 <i id="calibrateBlackButtonIcon" class="sync alternate icon"></i>
                 Calibrate Black
+            </button>
+            <button class="ui fluid labeled icon button secondary" style="margin-top: 0.5rem; margin-bottom: 1rem;" onclick="clearMeasurements()">
+                <i class="trash icon"></i>
+                Clear Measurements
             </button>
             <canvas id="historyChart"></canvas>
         </div>
@@ -163,6 +167,16 @@
                         referenceButtonIcon.classList.remove("spinner");
                         referenceButtonIcon.classList.add("sync");
                     });
+            };
+
+            const clearMeasurements = () => {
+                chart.data.datasets[0].data = [];
+                chart.data.datasets[1].data = [];
+                chart.data.datasets[2].data = [];
+                chart.data.labels = [];
+                chart.update();
+
+                Array.from(recentContainer.children).forEach(child => recentContainer.removeChild(child));
             };
         </script>
     </body>
