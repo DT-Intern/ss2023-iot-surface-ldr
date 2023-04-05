@@ -8,16 +8,30 @@
     <body>
         <div class="ui container" style="margin: 1rem">
             <h1>IoT Surface LDR Dashboard</h1>
+            <h3 style="margin-top: 0; margin-bottom: 2.5rem;">By Maximilian Fluegel, Alina Simon and Jannes Bikker</h3>
             <div style="display: flex">
-                <div id="measureOutput" style="width: 100px; height: 100px; background-color: black;"></div>
+                <div id="measureOutput" style="width: 100px; height: 100px; background-color: black; border-radius: 1rem;"></div>
                 <h3 style="margin: 1rem">Recent colors:</h3>
                 <div id="historyOutput" style="display: flex">
 
                 </div>
             </div>
-            <button id="measureButton" class="ui fluid button primary" style="margin-top: 1rem" onclick="measure()">Start Measurement</button>
-            <button id="calibrateWhiteButton" class="ui fluid button orange" style="margin-top: 0.5rem" onclick="calibrate('action=2', 'calibrateWhiteButton')">Calibrate White</button>
-            <button id="calibrateBlackButton" class="ui fluid button orange" style="margin-top: 0.5rem; margin-bottom: 1rem;" onclick="calibrate('action=3', 'calibrateBlackButton')">Calibrate Black</button>
+            <button id="measureButton" class="ui fluid labeled icon button primary" style="margin-top: 1rem" onclick="measure()">
+                <i id="measureButtonIcon" class="tint icon"></i>
+                Start Single Measurement
+            </button>
+            <button id="continuousMeasureButton" class="ui fluid labeled positive icon button primary" style="margin-top: 0.5rem" onclick="measureContinuously()">
+                <i id="continuousMeasureButtonIcon" class="play icon"></i>
+                Measure Continuously
+            </button>
+            <button id="calibrateWhiteButton" class="ui fluid labeled icon button orange" style="margin-top: 0.5rem" onclick="calibrate('action=2', 'calibrateWhiteButton')">
+                <i id="calibrateWhiteButtonIcon" class="sync alternate icon"></i>
+                Calibrate White
+            </button>
+            <button id="calibrateBlackButton" class="ui fluid labeled icon button orange" style="margin-top: 0.5rem; margin-bottom: 1rem;" onclick="calibrate('action=3', 'calibrateBlackButton')">
+                <i id="calibrateBlackButtonIcon" class="sync alternate icon"></i>
+                Calibrate Black
+            </button>
             <canvas id="historyChart"></canvas>
         </div>
         <script>
@@ -31,9 +45,15 @@
 
             const context = document.getElementById("historyChart");
             const measureButton = document.getElementById("measureButton");
+            const measureButtonIcon = document.getElementById("measureButtonIcon");
+            const calibrateWhiteButton = document.getElementById("calibrateWhiteButton");
+            const calibrateBlackButton = document.getElementById("calibrateBlackButton");
+            const continuousMeasureButton = document.getElementById("continuousMeasureButton");
+            const continuousMeasureButtonIcon = document.getElementById("continuousMeasureButtonIcon");
             const recentContainer = document.getElementById("historyOutput");
 
             let labels = [];
+            let continuousEnabled = false;
             let redDataset = createDataset("Red", "rgb(255, 0, 0)");
             let greenDataset = createDataset("Green", "rgb(0, 255, 0)");
             let blueDataset = createDataset("Blue", "rgb(0, 0, 255)");
@@ -68,32 +88,80 @@
                 recentItem.style.marginTop = "0.9rem";
                 recentItem.style.marginRight = "0.25rem";
                 recentItem.style.backgroundColor = `rgb(${colors})`;
+                recentItem.style.borderRadius = "0.5rem";
                 recentContainer.insertBefore(recentItem, recentContainer.firstChild);
-
-                measureButton.disabled = false;
-                measureButton.classList.remove("loading");
                 document.getElementById("measureOutput").style.backgroundColor = `rgb(${colors})`;
             };
 
             const measure = () => {
                 measureButton.disabled = true;
-                measureButton.classList.add("loading");
+                measureButtonIcon.classList.remove("tint");
+                measureButtonIcon.classList.add("loading");
+                measureButtonIcon.classList.add("spinner");
 
                 fetch("http://172.20.10.8/action=1")
                     .then(r => r.text())
-                    .then(colors => insertColors(colors));
+                    .then(colors => {
+                        measureButton.disabled = false;
+                        measureButtonIcon.classList.remove("loading");
+                        measureButtonIcon.classList.remove("spinner");
+                        measureButtonIcon.classList.add("tint");
+                        insertColors(colors);
+                    });
+            };
+
+            const measureContinuously = () => {
+                if (continuousEnabled) {
+                    measureButton.disabled = false;
+                    calibrateWhiteButton.disabled = false;
+                    calibrateBlackButton.disabled = false;
+                    continuousEnabled = false;
+                    continuousMeasureButton.classList.remove("negative");
+                    continuousMeasureButton.classList.add("positive");
+                    continuousMeasureButtonIcon.classList.remove("loading");
+                    continuousMeasureButtonIcon.classList.remove("spinner");
+                    continuousMeasureButtonIcon.classList.add("play");
+                } else {
+                    measureButton.disabled = true;
+                    calibrateWhiteButton.disabled = true;
+                    calibrateBlackButton.disabled = true;
+                    continuousEnabled = true;
+                    continuousMeasureButton.classList.remove("positive");
+                    continuousMeasureButton.classList.add("negative");
+                    continuousMeasureButtonIcon.classList.remove("play");
+                    continuousMeasureButtonIcon.classList.add("loading");
+                    continuousMeasureButtonIcon.classList.add("spinner");
+                    fetchContinuously();
+                }
+            };
+
+            const fetchContinuously = () => {
+                if (continuousEnabled) {
+                    fetch("http://172.20.10.8/action=1")
+                        .then(r => r.text())
+                        .then(colors => {
+                            insertColors(colors);
+                            fetchContinuously();
+                        });
+                }
             };
 
             const calibrate = (color, button) => {
                 const referenceButton = document.getElementById(button);
+                const referenceButtonIcon = document.getElementById(`${button}Icon`);
+
                 referenceButton.disabled = true;
-                referenceButton.classList.add("loading");
+                referenceButtonIcon.classList.remove("sync");
+                referenceButtonIcon.classList.add("loading");
+                referenceButtonIcon.classList.add("spinner");
 
                 fetch(`http://172.20.10.8/${color}`)
                     .then(c => c.text())
                     .then(_ => {
                         referenceButton.disabled = false;
-                        referenceButton.classList.remove("loading");
+                        referenceButtonIcon.classList.remove("loading");
+                        referenceButtonIcon.classList.remove("spinner");
+                        referenceButtonIcon.classList.add("sync");
                     });
             };
         </script>
